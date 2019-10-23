@@ -82,9 +82,8 @@ object PermissionManager
          when
          {
             activity.checkSelfPermission(permission) == PackageManager.PERMISSION_GRANTED -> PermissionStatus.GRANTED
-            currentStatus == PermissionStatus.ASKING || currentStatus == PermissionStatus.DENIED
-                                                                                          -> PermissionStatus.DENIED
-            else                                                                          -> PermissionStatus.TO_ASK
+            !activity.shouldShowRequestPermissionRationale(permission)                    -> PermissionStatus.TO_ASK
+            else                                                                          -> PermissionStatus.DENIED
          }
       }
       else
