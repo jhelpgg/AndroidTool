@@ -8,6 +8,7 @@ import android.os.Build.VERSION
 import android.os.Build.VERSION_CODES
 import jhelp.thread.pools.CancelableTask
 import jhelp.thread.pools.delayed
+import jhelp.thread.pools.parallel
 import jhelp.thread.promise.FutureResult
 import jhelp.thread.promise.Promise
 import jhelp.thread.promise.future
@@ -45,6 +46,7 @@ object PermissionManager
    private val permissionsRequested = ArrayList<String>()
    private val tasksWaitPermissions = HashMap<String, ArrayList<Promise<Unit>>>()
    private var askPermissionsTask: CancelableTask? = null
+   private val allowAskPermission = HashMap<String, (BeforeAskPermissionAction) -> Unit>()
 
    /**
     * Initialize from [Application]
@@ -162,6 +164,47 @@ object PermissionManager
       }
    }
 
+   private fun askPermissionIfAllowed(permission: String, task: () -> Unit): FutureResult<Unit>
+   {
+      synchronized(this.allowAskPermission)
+      {
+         val taskAllow = this.allowAskPermission.remove(permission)
+
+         if (taskAllow != null)
+         {
+            return this.alertBeforeAskPermission(permission, task, taskAllow)
+         }
+      }
+
+      return this.askPermission(permission, task)
+   }
+
+   private fun denyPermission(permission: String)
+   {
+      synchronized(this.permissionsStatus)
+      {
+         this.permissionsStatus[permission] = PermissionStatus.DENIED
+      }
+   }
+
+   private fun alertBeforeAskPermission(
+      permission: String,
+      task: () -> Unit,
+      taskAllow: (BeforeAskPermissionAction) -> Unit
+                                       ): FutureResult<Unit>
+   {
+      val promise = Promise<Pair<String, () -> Unit>>()
+      val beforeAskPermissionAction = BeforeAskPermissionAction(permission, task, promise)
+      val future =
+         promise.futureResult
+            .thenUnwrap { (permission, task) -> askPermission(permission, task) }
+            .onError { denyPermission(it.message!!) }
+
+      ({ taskAllow(beforeAskPermissionAction) }).parallel()
+
+      return future
+   }
+
    private fun askPermission(permission: String, task: () -> Unit): FutureResult<Unit>
    {
       val promise = Promise<Unit>()
@@ -194,9 +237,20 @@ object PermissionManager
       {
          PermissionStatus.GRANTED -> task.future()
          PermissionStatus.DENIED  -> futureFailed(PermissionDeniedException(permission))
-         PermissionStatus.TO_ASK  -> this.askPermission(permission, task)
+         PermissionStatus.TO_ASK  -> this.askPermissionIfAllowed(permission, task)
          PermissionStatus.ASKING  -> this.askPermission(permission, task)
       }
+
+   fun registerForReactJustBeforeAskPermissionToUser(permission: String, task: (BeforeAskPermissionAction) -> Unit)
+   {
+      if (this.permissionStatus(permission) == PermissionStatus.TO_ASK)
+      {
+         synchronized(this.allowAskPermission)
+         {
+            this.allowAskPermission[permission] = task
+         }
+      }
+   }
 }
 
 /**

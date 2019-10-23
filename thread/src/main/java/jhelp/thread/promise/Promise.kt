@@ -1,5 +1,7 @@
 package jhelp.thread.promise
 
+import jhelp.thread.pools.parallel
+
 class Promise<R : Any>
 {
    val futureResult = FutureResult(this)
@@ -19,29 +21,31 @@ class Promise<R : Any>
          this.finished = true
       }
 
-      synchronized(this.cancelListeners) {
-         for (promiseCancelListener in this.cancelListeners)
-         {
-            promiseCancelListener.promiseCanceled(this, reason)
-         }
+      ({
+         synchronized(this.cancelListeners) {
+            for (promiseCancelListener in this.cancelListeners)
+            {
+               promiseCancelListener.promiseCanceled(this, reason)
+            }
 
-         this.cancelListeners.clear()
-         this.cancelListeners.trimToSize()
-      }
+            this.cancelListeners.clear()
+            this.cancelListeners.trimToSize()
+         }
+      }).parallel()
    }
 
    fun result(result: R)
    {
       synchronized(this.lock) { this.finished = true }
 
-      this.futureResult.result(result)
+      ({ this.futureResult.result(result) }).parallel()
    }
 
    fun error(exception: Exception)
    {
       synchronized(this.lock) { this.finished = true }
 
-      this.futureResult.error(exception)
+      ({ this.futureResult.error(exception) }).parallel()
    }
 
    fun registerPromiseCancelListener(promiseCancelListener: (promise: Promise<R>, reason: String) -> Unit) =
@@ -58,7 +62,7 @@ class Promise<R : Any>
       synchronized(this.lock) {
          if (this.canceled)
          {
-            promiseCancelListener.promiseCanceled(this, this.cancelReason)
+            ({ promiseCancelListener.promiseCanceled(this, this.cancelReason) }).parallel()
             return
          }
 
