@@ -15,18 +15,6 @@ object PoolManager
    private val numberActiveThreads = AtomicInteger(0)
    private val pool = Queue<PoolManagerTask>()
 
-   /**
-    * Must be called inside synchronized(this.lock) {.. } block
-    */
-   private fun postNext()
-   {
-      if (this.pool.notEmpty && this.numberActiveThreads.get() < MAXIMUM_NUMBER_THREAD)
-      {
-         this.numberActiveThreads.incrementAndGet()
-         Thread(this.pool.outqueue()).start()
-      }
-   }
-
    internal fun oneThreadFinished(): Runnable?
    {
       synchronized(this.lock) {
@@ -36,7 +24,6 @@ object PoolManager
          }
 
          this.numberActiveThreads.decrementAndGet()
-         this.postNext()
          return null
       }
    }
@@ -45,7 +32,12 @@ object PoolManager
    {
       synchronized(this.lock) {
          this.pool.inqueue(PoolManagerTask(runnable))
-         this.postNext()
+
+         if (this.numberActiveThreads.get() < MAXIMUM_NUMBER_THREAD)
+         {
+            this.numberActiveThreads.incrementAndGet()
+            Thread(this.pool.outqueue()).start()
+         }
       }
    }
 

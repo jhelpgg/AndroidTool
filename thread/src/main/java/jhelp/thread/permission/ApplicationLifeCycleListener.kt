@@ -5,6 +5,11 @@ import android.app.Application
 import android.os.Bundle
 import java.lang.ref.WeakReference
 
+/**
+ * Observe activities life cycle of current [Application]
+ *
+ * It is used to know current active [Activity] and for refresh permissions status if need each time an [Activity] resumed
+ */
 internal object ApplicationLifeCycleListener : Application.ActivityLifecycleCallbacks
 {
    private val lock = Object()

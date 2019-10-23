@@ -14,6 +14,27 @@ import jhelp.thread.promise.future
 import jhelp.thread.promise.futureFailed
 import java.util.concurrent.atomic.AtomicBoolean
 
+/**
+ * Manage permissions and call registered tasks.
+ *
+ * To initialize it, two strategies are recommended (Choose the one fit more to your application):
+ * 1. Create a class that extends [Application] and call [PermissionManager.initialize] inside the
+ *    [Application.onCreate] method (Don't forget to adapt AndroidManifest). This way, the initialization is made even
+ *    if application is start on background, via a JobScheduler by example.
+ *
+ * 1. Call [PermissionManager.initialize] inside ech [Activity.onCreate] of activities can start first.
+ *    With this approach, the system work only when user use tha application.
+ *
+ * Initialization is mandatory, the system can't work without it.
+ *
+ * To do a task with a specific permission, just call [PermissionManager.onPermission], then the system will do the work.
+ * That is to say:
+ * 1. If permission granted, do the task immediately
+ * 1. If permission is denied, push a error in [FutureResult]
+ * 1. If permission not ask and need user validation, show the Android popup, wait user decision abd play tadk or push
+ * error depends if user accept or refuse?
+ *
+ */
 object PermissionManager
 {
    private val lock = Object()
@@ -25,6 +46,9 @@ object PermissionManager
    private val tasksWaitPermissions = HashMap<String, ArrayList<Promise<Unit>>>()
    private var askPermissionsTask: CancelableTask? = null
 
+   /**
+    * Initialize from [Application]
+    */
    fun initialize(application: Application)
    {
       if (this.initialized.getAndSet(true))
@@ -35,8 +59,14 @@ object PermissionManager
       application.registerActivityLifecycleCallbacks(ApplicationLifeCycleListener)
    }
 
+   /**
+    * Initialize from [Activity]
+    */
    fun initialize(activity: Activity) = this.initialize(activity.application)
 
+   /**
+    * Compute new current permission status
+    */
    private fun checkPermissionStatus(
       permission: String,
       currentStatus: PermissionStatus = PermissionStatus.TO_ASK
@@ -61,6 +91,9 @@ object PermissionManager
       }
    }
 
+   /**
+    * Current status of given permission
+    */
    fun permissionStatus(permission: String) =
       synchronized(this.permissionsStatus)
       {
@@ -69,7 +102,6 @@ object PermissionManager
                                             this.checkPermissionStatus(permission)
                                          })
       }
-
 
    @TargetApi(VERSION_CODES.M)
    private fun requestPermissions()
@@ -151,6 +183,12 @@ object PermissionManager
       return promise.futureResult.then { task() }
    }
 
+   /**
+    * Play task when permission granted by user.
+    *
+    * Return a [FutureResult] to be able do something else after the given task.
+    * The [FutureResult] is put on error if permission denied, so its also possible to react to it.
+    */
    fun onPermission(permission: String, task: () -> Unit): FutureResult<Unit> =
       when (this.permissionStatus(permission))
       {
@@ -161,12 +199,27 @@ object PermissionManager
       }
 }
 
+/**
+ * Play task when permission granted by user.
+ *
+ * Return a [FutureResult] to be able do something else after the given task.
+ * The [FutureResult] is put on error if permission denied, so its also possible to react to it.
+ */
 fun <R : Any> (() -> R).onPermission(permission: String) =
    PermissionManager.onPermission(permission) {}.then { this() }
 
+/**
+ * Create a function that will play task when permission granted by user.
+ *
+ * Created function will return a [FutureResult] to be able do something else after the given task.
+ * The [FutureResult] is put on error if permission denied, so its also possible to react to it.
+ */
 fun <P, R : Any> ((P) -> R).onPermission(permission: String): (P) -> FutureResult<R> =
    { parameter: P -> PermissionManager.onPermission(permission) {}.then { this(parameter) } }
 
+/**
+ * For task that need more than one permission
+ */
 fun <R : Any> (() -> R).onPermissions(vararg permissions: String): FutureResult<R>
 {
    return when

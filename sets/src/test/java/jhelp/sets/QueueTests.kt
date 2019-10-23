@@ -66,7 +66,6 @@ class QueueTests
       queue.inqueue("one")
       queue.outqueue()
 
-
       try
       {
          queue.outqueue()
