@@ -86,7 +86,7 @@ class ObservableTests
       Assert.assertTrue(this.endsWithTests.contains("2 - Test"))
 
       Assert.assertFalse(this.endsWithTests.contains(""))
-      Assert.assertFalse(this.startsWithTests.contains("Something"))
+      Assert.assertFalse(this.endsWithTests.contains("Something"))
       Assert.assertFalse(this.endsWithTests.contains("Test - 2"))
    }
 }
