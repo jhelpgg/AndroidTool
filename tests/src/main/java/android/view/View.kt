@@ -1,10 +1,14 @@
 package android.view
 
 import android.content.Context
-import android.content.res.ColorStateList
-import android.graphics.BlendMode
+import android.content.Intent
+import android.content.res.TypedArray
+import android.graphics.drawable.Drawable
+import android.graphics.drawable.DummyDrawable
 import android.util.AttributeSet
 import android.util.LayoutDirection
+import android.view.ContextMenu.ContextMenuInfo
+import androidx.annotation.AttrRes
 
 open class View(private val context: Context, private var attributes: AttributeSet?, private var defStyleAttr: Int)
 {
@@ -287,10 +291,120 @@ open class View(private val context: Context, private var attributes: AttributeS
 
       @JvmStatic
       val DRAG_FLAG_GLOBAL = 1 shl 8
+      @JvmStatic
+      val DRAG_FLAG_GLOBAL_URI_READ = Intent.FLAG_GRANT_READ_URI_PERMISSION
+      @JvmStatic
+      val DRAG_FLAG_GLOBAL_URI_WRITE = Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+      @JvmStatic
+      val DRAG_FLAG_GLOBAL_PERSISTABLE_URI_PERMISSION = Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION
+      @JvmStatic
+      val DRAG_FLAG_GLOBAL_PREFIX_URI_PERMISSION = Intent.FLAG_GRANT_PREFIX_URI_PERMISSION
+      @JvmStatic
+      val DRAG_FLAG_OPAQUE = 1 shl 9
+
+      @JvmStatic
+      val SCROLLBAR_POSITION_DEFAULT = 0
+      @JvmStatic
+      val SCROLLBAR_POSITION_LEFT = 1
+      @JvmStatic
+      val SCROLLBAR_POSITION_RIGHT = 2
+
+      val LAYER_TYPE_NONE = 0
+      @JvmStatic
+      val LAYER_TYPE_SOFTWARE = 1
+      @JvmStatic
+      val LAYER_TYPE_HARDWARE = 2
+
+   }
+
+   interface OnScrollChangeListener
+   {
+      fun onScrollChange(v: View, scrollX: Int, scrollY: Int, oldScrollX: Int, oldScrollY: Int)
+   }
+
+  interface OnLayoutChangeListener
+   {
+      fun onLayoutChange(
+         v: View, left: Int, top: Int, right: Int, bottom: Int,
+         oldLeft: Int, oldTop: Int, oldRight: Int, oldBottom: Int
+                        )
+   }
+   interface OnKeyListener
+   {
+      fun onKey(v: View, keyCode: Int, event: KeyEvent): Boolean
+   }
+
+   interface OnUnhandledKeyEventListener
+   {
+      fun onUnhandledKeyEvent(v: View, event: KeyEvent): Boolean
+   }
+
+   interface OnTouchListener
+   {
+      fun onTouch(v: View, event: MotionEvent): Boolean
+   }
+
+   interface OnHoverListener
+   {
+      fun onHover(v: View, event: MotionEvent): Boolean
+   }
+
+   interface OnGenericMotionListener
+   {
+      fun onGenericMotion(v: View, event: MotionEvent): Boolean
+   }
+
+   interface OnLongClickListener
+   {
+      fun onLongClick(v: View): Boolean
+   }
+
+   interface OnDragListener
+   {
+      fun onDrag(v: View, event: DragEvent): Boolean
+   }
+
+   interface OnFocusChangeListener
+   {
+      fun onFocusChange(v: View, hasFocus: Boolean)
+   }
+
+   interface OnClickListener
+   {
+      fun onClick(v: View)
+   }
+
+   interface OnContextClickListener
+   {
+      fun onContextClick(v: View): Boolean
+   }
+
+   interface OnCreateContextMenuListener
+   {
+      fun onCreateContextMenu(menu: ContextMenu, v: View, menuInfo: ContextMenuInfo)
+   }
+
+   interface OnSystemUiVisibilityChangeListener
+   {
+      fun onSystemUiVisibilityChange(visibility: Int)
+   }
+
+   interface OnAttachStateChangeListener
+   {
+      fun onViewAttachedToWindow(v: View)
+
+      fun onViewDetachedFromWindow(v: View)
+   }
+
+   interface OnApplyWindowInsetsListener
+   {
+      fun onApplyWindowInsets(v: View, insets: WindowInsets): WindowInsets
    }
 
    private var defStyleRes = 0
    private var id = NO_ID
+   private var verticalFadingEdgeLength = 0
+   private var hoorizontalFadingEdgeLength = 0
    protected var mParent:ViewParent?=null
    protected var mLayoutParams: ViewGroup.LayoutParams? = null
 
@@ -311,4 +425,99 @@ open class View(private val context: Context, private var attributes: AttributeS
    {
       this.id = id
    }
+
+   open fun getAttributeResolutionStack(@AttrRes attribute: Int) =  IntArray(0)
+
+   open fun getAttributeSourceResourceMap() : Map<Int, Int> = HashMap()
+
+   open fun getExplicitStyle() = 0
+
+   fun saveAttributeDataForStyleable(
+      context: Context,
+      styleable: IntArray, attrs: AttributeSet?,
+      t: TypedArray,
+      defStyleAttr: Int, defStyleRes: Int
+                                    ) = Unit
+
+   open fun getVerticalFadingEdgeLength() = this.verticalFadingEdgeLength
+
+   open fun setFadingEdgeLength(length: Int) {this.verticalFadingEdgeLength=length}
+
+   open fun getHorizontalFadingEdgeLength(): Int=this.hoorizontalFadingEdgeLength
+
+   open fun getVerticalScrollbarWidth() = 16
+
+    protected open fun getHorizontalScrollbarHeight() = 16
+
+   open fun setVerticalScrollbarThumbDrawable(drawable: Drawable?) = Unit
+
+   open fun setVerticalScrollbarTrackDrawable(drawable: Drawable?) = Unit
+
+   open fun setHorizontalScrollbarThumbDrawable(drawable: Drawable?) = Unit
+
+   open fun setHorizontalScrollbarTrackDrawable(drawable: Drawable?) = Unit
+
+   open fun getVerticalScrollbarThumbDrawable(): Drawable? = DummyDrawable
+
+   open fun getVerticalScrollbarTrackDrawable(): Drawable? = DummyDrawable
+
+   open fun getHorizontalScrollbarThumbDrawable(): Drawable? = DummyDrawable
+
+   open fun getHorizontalScrollbarTrackDrawable(): Drawable? = DummyDrawable
+
+   open fun setVerticalScrollbarPosition(position: Int) = Unit
+
+   open fun getVerticalScrollbarPosition(): Int = 0
+
+   open fun setScrollIndicators(indicators: Int) = Unit
+
+   open fun setScrollIndicators(indicators: Int, mask: Int) = Unit
+
+   open fun getScrollIndicators(): Int = 0
+
+   open fun setOnScrollChangeListener(l: OnScrollChangeListener) = Unit
+
+   open fun setOnFocusChangeListener(l: OnFocusChangeListener)=Unit
+
+   open fun addOnLayoutChangeListener(listener: OnLayoutChangeListener)=Unit
+
+   open fun removeOnLayoutChangeListener(listener: OnLayoutChangeListener)=Unit
+
+   open fun addOnAttachStateChangeListener(listener: OnAttachStateChangeListener)=Unit
+
+   open fun removeOnAttachStateChangeListener(listener: OnAttachStateChangeListener) = Unit
+
+   open fun getOnFocusChangeListener(): OnFocusChangeListener? = null
+
+   open fun setOnClickListener(l: OnClickListener?) = Unit
+
+   open fun hasOnClickListeners(): Boolean = false
+
+   open fun setOnLongClickListener(l: OnLongClickListener?) = Unit
+
+   open fun setOnContextClickListener(l: OnContextClickListener?)=Unit
+
+   open fun setOnCreateContextMenuListener(l: OnCreateContextMenuListener) = Unit
+
+   open fun performClick(): Boolean = false
+
+   open fun callOnClick(): Boolean = false
+
+   open fun performLongClick(): Boolean=false
+
+   open fun performLongClick(x: Float, y: Float): Boolean=false
+
+   open fun performContextClick(x: Float, y: Float): Boolean=false
+
+   open fun performContextClick(): Boolean = false
+
+   open fun showContextMenu(): Boolean = false
+
+   open fun showContextMenu(x: Float, y: Float): Boolean = false
+
+   open fun startActionMode(callback: ActionMode.Callback): ActionMode?=null
+
+   open fun startActionMode(callback: ActionMode.Callback, type: Int): ActionMode?=null
+
+
 }
