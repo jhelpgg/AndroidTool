@@ -23,7 +23,7 @@ abstract class Observable<O : Observable<O>>
    private val observers = ArrayList<Pair<MatcherObservable<O>, Observer<O>>>()
 
    /**
-    * Register an [Observer] called if by given [MatcherObservable] satisfied
+    * Register an [Observer] called if given [MatcherObservable] satisfied
     *
     * @param observer [Observer] registered to changes
     * @param matchObservable Determine if [Observer] called for specific change.
@@ -33,7 +33,7 @@ abstract class Observable<O : Observable<O>>
       this.observe(observer.observer(), matchObservable.matcher())
 
    /**
-    * Register an [Observer] called if by given [MatcherObservable] satisfied
+    * Register an [Observer] called if given [MatcherObservable] satisfied
     *
     * @param observer [Observer] registered to changes
     * @param matchObservable Determine if [Observer] called for specific change.
@@ -94,7 +94,7 @@ abstract class Observable<O : Observable<O>>
     * It returns a [FutureResult] to be able receive the matching state and do action with it when it happen.
     *
     * Note:
-    * > It will be called immediately, if [Observable] already match tne condition
+    * > It will be called immediately, if [Observable] already match the condition
     */
    fun oneTime(matchObservable: (O) -> Boolean) = this.oneTime(matchObservable.matcher())
 
@@ -104,7 +104,7 @@ abstract class Observable<O : Observable<O>>
     * It returns a [FutureResult] to be able receive the matching state and do action with it when it happen.
     *
     * Note:
-    * > It will be called immediately, if [Observable] already match tne condition
+    * > It will be called immediately, if [Observable] already match the condition
     */
    fun oneTime(matchObservable: MatcherObservable<O> = matchAll()): FutureResult<O>
    {

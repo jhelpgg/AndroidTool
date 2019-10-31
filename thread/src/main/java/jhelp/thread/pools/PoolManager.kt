@@ -87,6 +87,13 @@ object PoolManager
       this.postDelayed(repeatableTask::run, delayMilliseconds)
       return repeatableTask
    }
+
+
+   fun repeatUI(
+      task: () -> Unit,
+      delayMilliseconds: Long,
+      repeatDelay: Long
+               ) = this.repeat(task, delayMilliseconds, repeatDelay, PoolUI)
 }
 
 fun (() -> Unit).parallel(poolType: PoolType = PoolGlobal) = PoolManager.post(this, poolType)

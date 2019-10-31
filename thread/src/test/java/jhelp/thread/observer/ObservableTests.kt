@@ -71,16 +71,22 @@ class ObservableTests
       Assert.assertTrue(this.allStrings.contains("Test - 2"))
       Assert.assertTrue(this.allStrings.contains("2 - Test"))
 
+      //
       Assert.assertTrue(this.startsWithTests.contains("Test"))
       Assert.assertTrue(this.startsWithTests.contains("Test - 1"))
       Assert.assertTrue(this.startsWithTests.contains("Test - 2"))
+
       Assert.assertFalse(this.startsWithTests.contains(""))
+      Assert.assertFalse(this.startsWithTests.contains("Something"))
       Assert.assertFalse(this.startsWithTests.contains("1 - Test"))
 
+      //
       Assert.assertTrue(this.endsWithTests.contains("Test"))
       Assert.assertTrue(this.endsWithTests.contains("1 - Test"))
       Assert.assertTrue(this.endsWithTests.contains("2 - Test"))
+
       Assert.assertFalse(this.endsWithTests.contains(""))
+      Assert.assertFalse(this.startsWithTests.contains("Something"))
       Assert.assertFalse(this.endsWithTests.contains("Test - 2"))
    }
 }

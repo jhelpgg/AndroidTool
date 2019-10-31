@@ -15,6 +15,6 @@ class BeforeAskPermissionAction(
 
    fun refuseToAskPermission()
    {
-      this.promiseReceiveDecision.error(Exception(permission))
+      this.promiseReceiveDecision.error(Exception(this.permission))
    }
 }

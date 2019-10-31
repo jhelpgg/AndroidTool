@@ -197,7 +197,7 @@ object PermissionManager
       val future =
          promise.futureResult
             .thenUnwrap { (permission, task) -> askPermission(permission, task) }
-            .onError { denyPermission(it.message!!) }
+            .onError { exception -> denyPermission(exception.message!!) }
 
       ({ taskAllow(beforeAskPermissionAction) }).parallel()
 

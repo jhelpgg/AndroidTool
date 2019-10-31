@@ -8,9 +8,9 @@ sealed class PoolType
 object PoolUI : PoolType()
 
 val PoolGlobal = Pool("Global")
-val PoolIO = Pool("IO", 1)
+val PoolNetwork = Pool("Network", 2)
 
-data class Pool(val name: String, val maximumNumberThread: Int = 16) : PoolType()
+data class Pool(val name: String, val maximumNumberParallelTask: Int = 16) : PoolType()
 {
    private val lock = Object()
    private val numberActiveThreads = AtomicInteger(0)
@@ -21,7 +21,7 @@ data class Pool(val name: String, val maximumNumberThread: Int = 16) : PoolType(
     */
    private fun postNext()
    {
-      if (this.pool.notEmpty && this.numberActiveThreads.get() < this.maximumNumberThread)
+      if (this.pool.notEmpty && this.numberActiveThreads.get() < this.maximumNumberParallelTask)
       {
          this.numberActiveThreads.incrementAndGet()
          PoolManager.postInternal(this.pool.outqueue())
