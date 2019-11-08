@@ -48,6 +48,8 @@ val theApplication by lazy {
    }
 }
 
+val mainHandler by lazy { Handler(theApplication.getMainLooper()) }
+
 fun <A : Activity> launchActivity(intent: Intent, bundle: Bundle? = null): A?
 {
    val componentName = intent.component
